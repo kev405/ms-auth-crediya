@@ -21,6 +21,7 @@ import org.springframework.web.reactive.function.server.HandlerStrategies;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import co.com.crediya.model.user.exceptions.DomainConflictException;
 import co.com.crediya.model.user.exceptions.DomainValidationException;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 @Order(-2) // prioridad más alta que el handler por defecto
 public class GlobalErrorHandler implements ErrorWebExceptionHandler {
@@ -46,6 +48,8 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler {
         var status = mapStatus(ex);
         var body   = toProblemDetail(req, ex, status);
 
+        log.error(ex.getMessage(), ex);
+
         return ServerResponse
                 .status(status)
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
@@ -59,19 +63,19 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler {
 
     private HttpStatusCode mapStatus(Throwable ex) {
         if (ex instanceof WebExchangeBindException)
-            return HttpStatus.BAD_REQUEST;           // validaciones Bean Validation en entrada
+            return HttpStatus.BAD_REQUEST;
         if (ex instanceof ServerWebInputException)
-            return HttpStatus.BAD_REQUEST;           // path/query/body mal formados
+            return HttpStatus.BAD_REQUEST;
         if (ex instanceof DataIntegrityViolationException)
-            return HttpStatus.CONFLICT;       // UNIQUE, FK, etc.
+            return HttpStatus.CONFLICT;
         if (ex instanceof ResponseStatusException rse)
-            return rse.getStatusCode();           // respetar el que ya trae
+            return rse.getStatusCode();
         if (ex instanceof ErrorResponseException ere)
-            return ere.getStatusCode();            // 6.x ProblemDetail exceptions
+            return ere.getStatusCode();
         if (ex instanceof DomainConflictException)
-            return HttpStatus.CONFLICT;             // 409 negocio
+            return HttpStatus.CONFLICT;
         if (ex instanceof DomainValidationException)
-            return HttpStatus.UNPROCESSABLE_ENTITY; // 422 negocio
+            return HttpStatus.UNPROCESSABLE_ENTITY;
         return HttpStatus.INTERNAL_SERVER_ERROR;
     }
 
@@ -95,11 +99,6 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler {
             pd.setProperty("errors", fieldErrors);
         }
 
-        // Si tus Domain*Ex tienen "code", añádelo
-        if (ex instanceof HasDomainCode c && c.code() != null) {
-            pd.setProperty("code", c.code());
-        }
-
         return pd;
     }
 
@@ -111,10 +110,6 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler {
     private String safeDetail(Throwable ex) {
         return ex.getMessage() == null ? ex.getClass().getSimpleName() :
                 ex.getMessage();
-    }
-
-    public interface HasDomainCode {
-        String code();
     }
 
 }

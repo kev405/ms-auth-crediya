@@ -2,25 +2,49 @@ package co.com.crediya.api.config;
 
 import co.com.crediya.api.Handler;
 import co.com.crediya.api.RouterRest;
+import co.com.crediya.api.dto.UserPath;
+import co.com.crediya.api.mapper.UserDTOMapper;
+import co.com.crediya.api.validation.DtoValidator;
+import co.com.crediya.usecase.user.UserUseCaseInterface;
+import reactor.core.publisher.Flux;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 @ContextConfiguration(classes = {RouterRest.class, Handler.class})
 @WebFluxTest
+@EnableConfigurationProperties(UserPath.class)
 @Import({CorsConfig.class, SecurityHeadersConfig.class})
 class ConfigTest {
 
     @Autowired
     private WebTestClient webTestClient;
 
+    @MockitoBean
+    private UserUseCaseInterface userUseCase;
+
+     @MockitoBean
+     private UserDTOMapper userDTOMapper;
+
+     @MockitoBean
+     private DtoValidator dtoValidator;
+
+    @BeforeEach
+    void setUp() {
+        Mockito.when(userUseCase.getAllUsers()).thenReturn(Flux.empty());
+    }
+
     @Test
     void corsConfigurationShouldAllowOrigins() {
         webTestClient.get()
-                .uri("/api/usecase/path")
+                .uri("/api/users")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().valueEquals("Content-Security-Policy",

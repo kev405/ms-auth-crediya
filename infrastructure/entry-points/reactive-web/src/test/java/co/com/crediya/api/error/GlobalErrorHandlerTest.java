@@ -3,17 +3,27 @@ package co.com.crediya.api.error;
 import co.com.crediya.model.user.exceptions.DomainConflictException;
 import co.com.crediya.model.user.exceptions.DomainValidationException;
 import lombok.extern.slf4j.Slf4j;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import reactor.core.publisher.Mono;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
 import java.util.Objects;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.springframework.core.MethodParameter;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.support.WebExchangeBindException;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.server.ServerWebExchange;
 
 @Slf4j
 class GlobalErrorHandlerTest {
@@ -171,16 +181,71 @@ class GlobalErrorHandlerTest {
     }
 
     @Test
-    void domainValidationException_includesCodeInProblemDetail() {
+    void runtimeException_messageNull() {
         var request  = MockServerHttpRequest.get("/users").build();
         var exchange = MockServerWebExchange.from(request);
 
-        var ex = new DomainValidationException(null, null);
+        var ex = new RuntimeException();
         handler.handle(exchange, ex).block();
 
-        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, exchange.getResponse().getStatusCode());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exchange.getResponse().getStatusCode());
         assertEquals("application/problem+json",
                 Objects.requireNonNull(
                         exchange.getResponse().getHeaders().getContentType()).toString());
+    }
+
+    @Test
+    void nonHttpStatus_usesToStringInTitle() {
+        var exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/weird").build()
+        );
+
+        var nonStandard = HttpStatusCode.valueOf(499);           // no-HttpStatus
+        var ex = new ResponseStatusException(nonStandard, "weird");
+
+        handler.handle(exchange, ex).block();
+
+        // clave: ¡bloquear!
+        String body = exchange.getResponse().getBodyAsString().block();
+        assertNotNull(body);
+        assertTrue(body.contains("\"status\":499"));
+        assertTrue(body.contains("\"title\":\"" + nonStandard.toString() + "\""));
+        assertEquals("application/problem+json",
+                exchange.getResponse().getHeaders().getContentType().toString());
+    }
+
+    @Test
+    void whenWriteFails_handlerSets500AndCompletes() {
+        // 1) Mockeamos exchange y response
+        var exchange  = mock(ServerWebExchange.class, RETURNS_DEEP_STUBS);
+        var response  = mock(ServerHttpResponse.class, RETURNS_DEEP_STUBS);
+
+        // Request real para que ServerRequest.create(...) tenga path y headers válidos
+        var request = MockServerHttpRequest.get("/users").build();
+
+        when(exchange.getRequest()).thenReturn(request);
+        when(exchange.getResponse()).thenReturn(response);
+
+        // Infra mínima que usa writeTo(...)
+        when(response.getHeaders()).thenReturn(new HttpHeaders());
+        when(response.bufferFactory()).thenReturn(new DefaultDataBufferFactory());
+
+        // Simulamos que escribir el body falla
+        when(response.writeWith(any())).thenReturn(Mono.error(new RuntimeException("boom")));
+        // Y que completar la respuesta funciona
+        when(response.setComplete()).thenReturn(Mono.empty());
+
+        // 2) Disparamos un error que mapea a 409 (no 500) para ver el cambio a 500
+        var ex = new DataIntegrityViolationException("duplicate key");
+
+        // 3) Act
+        handler.handle(exchange, ex).block();
+
+        // 4) Assert: primero intenta 409, falla al escribir, y luego cae al 500 y completa
+        InOrder inOrder = inOrder(response);
+        inOrder.verify(response).setStatusCode(HttpStatus.CONFLICT);             // antes de escribir
+        verify(response).writeWith(any());                                        // intento de escritura
+        inOrder.verify(response).setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR); // onErrorResume
+        verify(response).setComplete();                                           // onErrorResume
     }
 }

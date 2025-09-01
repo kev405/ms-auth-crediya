@@ -164,5 +164,15 @@ class ReactiveAdapterOperationsTest {
         }
     }
 
+    @Test
+    void findById_whenEntityIsNull_shouldReturnEmptyMono() {
+        // 1. Simula que el repositorio devuelve un Mono vacío (no encontró nada)
+        when(repository.findById("1")).thenReturn(Mono.empty());
+
+        // 2. Verifica que tu operación también devuelva un Mono vacío
+        StepVerifier.create(operations.findById("1"))
+                .verifyComplete();
+    }
+
     interface DummyRepository extends ReactiveCrudRepository<DummyData, String>, ReactiveQueryByExampleExecutor<DummyData> {}
 }

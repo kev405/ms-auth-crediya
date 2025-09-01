@@ -10,4 +10,6 @@ public interface UserUseCaseInterface {
     Mono<Void> deleteById(String id);
 
     Flux<User> getAllUsers();
+
+    Mono<Boolean> existUserByEmail(String email);
 }

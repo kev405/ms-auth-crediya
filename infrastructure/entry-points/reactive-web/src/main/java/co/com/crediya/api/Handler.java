@@ -11,9 +11,11 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class Handler {
@@ -38,6 +40,12 @@ public class Handler {
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_NDJSON) // application/x-ndjson
                 .body(userUseCase.getAllUsers().map(userDTOMapper::toUserResponse), UserResponse.class);
+    }
+
+    public Mono<ServerResponse> listenExistByEmail(ServerRequest serverRequest) {
+        String email = serverRequest.pathVariable("email");
+        log.info("email: {}", email);
+        return userUseCase.existUserByEmail(email).flatMap(response -> ServerResponse.ok().bodyValue(response));
     }
 
     public Mono<ServerResponse> listenDeleteUser(ServerRequest serverRequest) {
