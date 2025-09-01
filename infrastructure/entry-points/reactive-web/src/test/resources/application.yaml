@@ -1,0 +1,5 @@
+routes:
+  paths:
+    users: /api/users
+    usersById: /api/users/{id}
+    usersByEmail: /api/users/email/{email}
