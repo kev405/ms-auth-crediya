@@ -1,10 +1,12 @@
-package co.com.crediya.r2dbc.entity;
+package co.com.crediya.r2dbc.user.entity;
 
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
@@ -25,6 +27,9 @@ public class UserEntity {
 
     @NotNull
     private String lastName;
+
+    @NotNull
+    String passwordHash;
 
     @NotNull
     @Column(unique = true)

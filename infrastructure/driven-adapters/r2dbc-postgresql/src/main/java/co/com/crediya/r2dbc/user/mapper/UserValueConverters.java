@@ -1,4 +1,4 @@
-package co.com.crediya.r2dbc.mapper;
+package co.com.crediya.r2dbc.user.mapper;
 
 import co.com.crediya.model.user.value.Email;
 import co.com.crediya.model.user.value.PhoneNumber;

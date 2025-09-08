@@ -1,7 +1,6 @@
 package co.com.crediya.r2dbc.tx;
 
 import co.com.crediya.model.user.gateways.TxRunner;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.reactive.TransactionalOperator;

@@ -1,7 +1,7 @@
-package co.com.crediya.r2dbc.mapper;
+package co.com.crediya.r2dbc.user.mapper;
 
 import co.com.crediya.model.user.User;
-import co.com.crediya.r2dbc.entity.UserEntity;
+import co.com.crediya.r2dbc.user.entity.UserEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

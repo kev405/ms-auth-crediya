@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -42,6 +43,7 @@ class ConfigTest {
     }
 
     @Test
+    @WithMockUser(roles = {"ADMIN"})
     void corsConfigurationShouldAllowOrigins() {
         webTestClient.get()
                 .uri("/api/users")

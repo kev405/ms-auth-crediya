@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class TxRunnerDefaultMethodsTest {
+class TxRunnerTest {
 
     static class TestTxRunner implements TxRunner {
         final AtomicInteger requiredCalls = new AtomicInteger();

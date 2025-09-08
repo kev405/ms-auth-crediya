@@ -1,6 +1,8 @@
 package co.com.crediya.api;
 
 import co.com.crediya.api.dto.CreateUserRequest;
+import co.com.crediya.api.dto.LoginRequest;
+import co.com.crediya.api.dto.TokenResponse;
 import co.com.crediya.api.dto.UserResponse;
 import co.com.crediya.api.mapper.UserDTOMapper;
 import co.com.crediya.api.validation.DtoValidator;
@@ -12,8 +14,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -25,6 +27,15 @@ public class Handler {
     private final UserDTOMapper userDTOMapper;
 
     private final DtoValidator dtoValidator;
+
+    public Mono<ServerResponse> listenLogin(ServerRequest req) {
+        return req.bodyToMono(LoginRequest.class)
+                .flatMap(dtoValidator::validate)
+                .map(userDTOMapper::toModel)
+                .flatMap(userUseCase::login)
+                .flatMap(jwt -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(new TokenResponse("Bearer", jwt, 7200)));
+    }
 
     public Mono<ServerResponse> listenSaveUser(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(CreateUserRequest.class)
@@ -38,7 +49,7 @@ public class Handler {
 
     public Mono<ServerResponse> listenGetAllUsers(ServerRequest serverRequest) {
         return ServerResponse.ok()
-                .contentType(MediaType.APPLICATION_NDJSON) // application/x-ndjson
+                .contentType(MediaType.APPLICATION_NDJSON)
                 .body(userUseCase.getAllUsers().map(userDTOMapper::toUserResponse), UserResponse.class);
     }
 

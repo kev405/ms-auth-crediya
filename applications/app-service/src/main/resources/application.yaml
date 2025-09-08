@@ -43,6 +43,7 @@ routes:
     users: /api/users
     usersById: /api/users/{id}
     usersByEmail: /api/users/email/{email}
+    login: /api/login
 
 springdoc:
   api-docs:
@@ -51,3 +52,6 @@ springdoc:
     path: /swagger-ui.html
     operationsSorter: alpha
     tagsSorter: alpha
+security:
+  jwt:
+    secret: 23A522D4A614E645267556B58703273357638792F423F4528482B4D6251655468

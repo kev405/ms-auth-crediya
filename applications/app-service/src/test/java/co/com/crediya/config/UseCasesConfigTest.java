@@ -1,5 +1,7 @@
 package co.com.crediya.config;
 
+import co.com.crediya.model.user.gateways.PasswordHasher;
+import co.com.crediya.model.user.gateways.TokenProvider;
 import co.com.crediya.model.user.gateways.TxRunner;
 import co.com.crediya.model.user.gateways.UserRepository;
 import reactor.core.publisher.Flux;
@@ -39,6 +41,16 @@ public class UseCasesConfigTest {
         @Bean
         public UserRepository userRepository() {
             return mock(UserRepository.class);
+        }
+
+        @Bean
+        public PasswordHasher passwordHasher() {
+            return mock(PasswordHasher.class);
+        }
+
+        @Bean
+        public TokenProvider tokenProvider() {
+            return mock(TokenProvider.class);
         }
 
         @Bean

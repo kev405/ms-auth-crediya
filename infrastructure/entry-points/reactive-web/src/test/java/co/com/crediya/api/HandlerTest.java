@@ -1,11 +1,11 @@
 package co.com.crediya.api;
 
-import co.com.crediya.api.dto.CreateUserRequest;
-import co.com.crediya.api.dto.UserPath;
-import co.com.crediya.api.dto.UserResponse;
+import co.com.crediya.api.dto.*;
 import co.com.crediya.api.mapper.UserDTOMapper;
 import co.com.crediya.api.validation.DtoValidator;
+import co.com.crediya.model.role.Role;
 import co.com.crediya.model.user.User;
+import co.com.crediya.model.user.UserLogin;
 import co.com.crediya.model.user.value.Email;
 import co.com.crediya.model.user.value.PhoneNumber;
 import co.com.crediya.model.user.value.Salary;
@@ -25,6 +25,8 @@ import static org.mockito.Mockito.*;
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
 
 @ExtendWith(MockitoExtension.class)
 class HandlerTest {
@@ -46,12 +48,14 @@ class HandlerTest {
         userPath.setUsers("/api/users");
         userPath.setUsersById("/api/users/{id}");
         userPath.setUsersByEmail("/api/users/email/{email}");
+        userPath.setLogin("/api/login");
 
         var handler = new Handler(useCase, mapper, validator);
 
         RouterFunction<ServerResponse> router =
                 route(POST(userPath.getUsers()), handler::listenSaveUser)
                         .andRoute(GET(userPath.getUsers()), handler::listenGetAllUsers)
+                        .andRoute(POST(userPath.getLogin()), handler::listenLogin)
                         .andRoute(GET(userPath.getUsersByEmail()), handler::listenExistByEmail)
                         .and(route(DELETE(userPath.getUsersById()), handler::listenDeleteUser));
 
@@ -61,14 +65,18 @@ class HandlerTest {
     @Test
     void saveUser_happyPath_returns200AndBody() {
         CreateUserRequest dto = new CreateUserRequest("Kevin", "Aristizabal", "karistizabal307@gmail.com",
-                LocalDate.parse("2001-01-01"), "+573001234567", "Calle 123 #45-67", java.math.BigDecimal.valueOf(5000000));
+                LocalDate.parse("2001-01-01"), "+573001234567","password123",
+                "Calle 123 #45-67", java.math.BigDecimal.valueOf(5000000), List.of("ADMIN"));
 
         User model = new User(null,"Kevin", "Aristizabal", new Email("karistizabal307@gmail.com"),
+                "password123",
+                Set.of(new Role("ADMIN")),
                 "Calle 123 #45-67", LocalDate.parse("2001-01-01"), new PhoneNumber("+573001234567"),
                 new Salary(java.math.BigDecimal.valueOf(5000000)));
 
         User saved = new User("2e022c3d-66e8-4a78-8d88-87ff8871c944","Kevin", "Aristizabal",
-                new Email("karistizabal307@gmail.com"), "Calle 123 #45-67",
+                new Email("karistizabal307@gmail.com"), "password123",
+                Set.of(new Role("ADMIN")),"Calle 123 #45-67",
                 LocalDate.parse("2001-01-01"), new PhoneNumber("+573001234567"),
                 new Salary(java.math.BigDecimal.valueOf(5000000)));
         UserResponse responseDto = new UserResponse("2e022c3d-66e8-4a78-8d88-87ff8871c944","Kevin", "Aristizabal",
@@ -100,10 +108,14 @@ class HandlerTest {
     @Test
     void getAllUsers_happyPath_returns200AndBody() {
         User user1 = new User("id1", "Alice", "Smith", new Email("alic@a.com"),
+                "password123",
+                Set.of(new Role("ADMIN")),
                 "Address 1",
                 LocalDate.parse("1990-01-01"), new PhoneNumber("+1234567890"),
                 new Salary(java.math.BigDecimal.valueOf(3000000)));
         User user2 = new User("id2", "Bob", "Johnson", new Email("jhona@m.com"),
+                "password123",
+                Set.of(new Role("ADMIN")),
                 "Address 2",
                 LocalDate.parse("1985-05-15"), new PhoneNumber("+1987654321"),
                 new Salary(java.math.BigDecimal.valueOf(4000000)));
@@ -149,6 +161,35 @@ class HandlerTest {
         verify(useCase).existUserByEmail(email);
         verifyNoMoreInteractions(useCase, mapper, validator);
 
+    }
+
+    @Test
+    void login_happyPath_returns200AndToken() {
+        // Arrange
+        var loginRequest = new LoginRequest("test@user.com", "password123");
+        var userLoginModel = new UserLogin("test@user.com", "password123");
+        var fakeJwt = "fake.jwt.token.string";
+        var expectedResponse = new TokenResponse("Bearer", fakeJwt, 7200);
+
+        // Mockeamos cada paso de la cadena reactiva en el handler
+        when(validator.validate(any(LoginRequest.class))).thenReturn(Mono.just(loginRequest));
+        when(mapper.toModel(loginRequest)).thenReturn(userLoginModel);
+        when(useCase.login(userLoginModel)).thenReturn(Mono.just(fakeJwt));
+
+        // Act & Assert
+        client.post().uri(userPath.getLogin())
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(loginRequest)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+                .expectBody(TokenResponse.class).isEqualTo(expectedResponse);
+
+        // Verificamos que se llamó a cada dependencia en orden
+        verify(validator).validate(loginRequest);
+        verify(mapper).toModel(loginRequest);
+        verify(useCase).login(userLoginModel);
+        verifyNoMoreInteractions(useCase, mapper, validator);
     }
 
     @Test
