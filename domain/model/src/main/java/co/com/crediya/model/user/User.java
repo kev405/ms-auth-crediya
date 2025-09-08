@@ -1,15 +1,19 @@
 package co.com.crediya.model.user;
+import co.com.crediya.model.role.Role;
 import co.com.crediya.model.user.exceptions.DomainValidationException;
 import co.com.crediya.model.user.value.Email;
 import co.com.crediya.model.user.value.PhoneNumber;
 import co.com.crediya.model.user.value.Salary;
 import java.time.LocalDate;
+import java.util.Set;
 
 public record User(
         String id,
         String name,
         String lastName,
         Email email,
+        String passwordHash,
+        Set<Role> roles,
         String address,
         LocalDate birthDate,
         PhoneNumber phone,

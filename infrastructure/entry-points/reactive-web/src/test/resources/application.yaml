@@ -3,3 +3,4 @@ routes:
     users: /api/users
     usersById: /api/users/{id}
     usersByEmail: /api/users/email/{email}
+    login: /api/login

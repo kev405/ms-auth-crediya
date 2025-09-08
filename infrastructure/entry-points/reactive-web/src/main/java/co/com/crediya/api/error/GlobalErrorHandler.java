@@ -20,6 +20,7 @@ import org.springframework.web.server.ServerWebInputException;
 import org.springframework.web.reactive.function.server.HandlerStrategies;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import co.com.crediya.model.user.exceptions.DomainConflictException;
+import co.com.crediya.model.user.exceptions.DomainUnauthorizedException;
 import co.com.crediya.model.user.exceptions.DomainValidationException;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -76,6 +77,8 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler {
             return HttpStatus.CONFLICT;
         if (ex instanceof DomainValidationException)
             return HttpStatus.UNPROCESSABLE_ENTITY;
+        if (ex instanceof DomainUnauthorizedException)
+            return HttpStatus.UNAUTHORIZED;
         return HttpStatus.INTERNAL_SERVER_ERROR;
     }
 
