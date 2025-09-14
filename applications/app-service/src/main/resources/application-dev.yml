@@ -1,0 +1,21 @@
+cors:
+  allowed-origins: "http://localhost:4200,http://localhost:8080"
+spring:
+  flyway:
+    enabled: true
+    url: jdbc:postgresql://localhost:5432/ms-auth-crediya
+    user: ${adapters.r2dbc.username}
+    password: ${adapters.r2dbc.password}
+    locations: classpath:db/migration
+    default-schema: public
+adapters:
+  r2dbc:
+    host: "localhost"
+    port: 5432
+    database: "ms-auth-crediya"
+    schema: "public"
+    username: "postgres"
+    password: "mysecretpassword"
+security:
+  jwt:
+    secret: 23A522D4A614E645267556B58703273357638792F423F4528482B4D6251655468

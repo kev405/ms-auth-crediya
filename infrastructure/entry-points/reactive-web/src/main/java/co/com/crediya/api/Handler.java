@@ -59,6 +59,12 @@ public class Handler {
         return userUseCase.existUserByEmail(email).flatMap(response -> ServerResponse.ok().bodyValue(response));
     }
 
+    public Mono<ServerResponse> listenUserDataByEmail(ServerRequest serverRequest) {
+        String email = serverRequest.pathVariable("email");
+        log.info("email: {}", email);
+        return userUseCase.userDataByEmail(email).flatMap(response -> ServerResponse.ok().bodyValue(response));
+    }
+
     public Mono<ServerResponse> listenDeleteUser(ServerRequest serverRequest) {
         String id = serverRequest.pathVariable("id");
 

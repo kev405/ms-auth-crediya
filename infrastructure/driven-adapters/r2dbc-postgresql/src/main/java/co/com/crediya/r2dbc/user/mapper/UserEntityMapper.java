@@ -1,6 +1,7 @@
 package co.com.crediya.r2dbc.user.mapper;
 
 import co.com.crediya.model.user.User;
+import co.com.crediya.model.user.UserData;
 import co.com.crediya.r2dbc.user.entity.UserEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -18,4 +19,6 @@ public interface UserEntityMapper {
     @Mapping(target = "phone", expression = "java(user.phone().value())")
     @Mapping(target = "salary", expression = "java(user.salary().value())")
     UserEntity toEntity(User user);
+
+    UserData toUserData(UserEntity userEntity);
 }

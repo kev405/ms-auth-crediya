@@ -98,5 +98,10 @@ public class UserUseCase implements UserUseCaseInterface {
                 .doOnSuccess(u -> log.info("User exists by email= " + email)));
     }
 
-
+    @Override
+    public Mono<UserData> userDataByEmail(String email) {
+        log.info("Checking if user exists by email= " + email);
+        return txRunner.readOnly(() -> userRepository.findByEmail(email)
+                .doOnSuccess(u -> log.info("User exists by email= " + email)));
+    }
 }

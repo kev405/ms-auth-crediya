@@ -2,6 +2,7 @@ package co.com.crediya.model.user.gateways;
 
 import co.com.crediya.model.role.Role;
 import co.com.crediya.model.user.User;
+import co.com.crediya.model.user.UserData;
 import co.com.crediya.model.usercredentials.UserCredentials;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -16,6 +17,8 @@ public interface UserRepository {
     Mono<Void> deleteById(String id);
 
     Mono<Boolean> existsByEmail(String email);
+
+    Mono<UserData> findByEmail(String email);
 
     Flux<User> getAllUsers();
 

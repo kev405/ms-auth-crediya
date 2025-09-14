@@ -154,6 +154,7 @@ public class RouterRest {
         return route(GET(userPath.getUsers()), handler::listenGetAllUsers)
                 .andRoute(POST(userPath.getUsers()), handler::listenSaveUser)
                 .andRoute(GET(userPath.getUsersByEmail()), handler::listenExistByEmail)
+                .andRoute(GET(userPath.getUsersDataByEmail()), handler::listenUserDataByEmail)
                 .andRoute(DELETE(userPath.getUsersById()), handler::listenDeleteUser)
                 .andRoute(POST(userPath.getLogin()), handler::listenLogin);
     }
