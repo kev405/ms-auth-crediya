@@ -2,6 +2,7 @@ package co.com.crediya.usecase.user;
 
 import co.com.crediya.model.role.Role;
 import co.com.crediya.model.user.User;
+import co.com.crediya.model.user.UserData;
 import co.com.crediya.model.user.UserLogin;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -17,5 +18,7 @@ public interface UserUseCaseInterface {
 
     Mono<Boolean> existUserByEmail(String email);
 
-    public Mono<String> login(UserLogin userWithCredentials);
+    Mono<String> login(UserLogin userWithCredentials);
+
+    Mono<UserData> userDataByEmail(String email);
 }

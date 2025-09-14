@@ -288,4 +288,78 @@ class UserUseCaseTest {
         verify(repo).existsByEmail("a@b.com");
         verifyNoMoreInteractions(repo);
     }
+
+    @Test
+    void userDataByEmail_forwardsUserData() {
+        var ud = mock(co.com.crediya.model.user.UserData.class);
+        when(repo.findByEmail("x@y.com")).thenReturn(Mono.just(ud));
+
+        StepVerifier.create(useCase.userDataByEmail("x@y.com"))
+                .expectNext(ud)
+                .verifyComplete();
+
+        verify(repo).findByEmail("x@y.com");
+        verifyNoMoreInteractions(repo);
+    }
+
+    @Test
+    void save_hashesPassword_andSavesHashedUser_andAssignsRolesWhenPresent() {
+        var roles = Set.of(new co.com.crediya.model.role.Role("ADMIN"));
+        var newUser = new User(
+                null, "Alice", "Smith",
+                new Email("alice@example.com"),
+                "plain-pass",
+                roles,
+                "Addr 1",
+                LocalDate.parse("1990-01-01"),
+                new PhoneNumber("+573001234567"),
+                new Salary(new BigDecimal("3000000"))
+        );
+
+        var savedId = "2b3d8236-fefa-4c2c-aa71-4cf50176249a";
+        var savedUser = new User(
+                savedId, "Alice", "Smith",
+                new Email("alice@example.com"),
+                null,
+                roles,
+                "Addr 1",
+                LocalDate.parse("1990-01-01"),
+                new PhoneNumber("+573001234567"),
+                new Salary(new BigDecimal("3000000"))
+        );
+
+        when(repo.existsByEmail("alice@example.com")).thenReturn(Mono.just(false));
+        when(hasher.hash("plain-pass")).thenReturn("HASHED-123");
+
+        var toSaveCaptor = org.mockito.ArgumentCaptor.forClass(User.class);
+        when(repo.save(toSaveCaptor.capture())).thenReturn(Mono.just(savedUser));
+        when(repo.assignRoles(UUID.fromString(savedId), roles)).thenReturn(Mono.empty());
+
+        StepVerifier.create(useCase.save(newUser))
+                .expectNext(savedUser)
+                .verifyComplete();
+
+        verify(hasher).hash("plain-pass");
+        var savedArg = toSaveCaptor.getValue();
+        assertEquals("HASHED-123", savedArg.passwordHash());
+        assertNull(savedArg.id());
+
+        verify(repo).assignRoles(UUID.fromString(savedId), roles);
+
+        verify(repo).existsByEmail("alice@example.com");
+        verify(repo).save(any(User.class));
+        verifyNoMoreInteractions(repo, hasher, tokenProvider);
+    }
+
+    @Test
+    void existUserByEmail_whenRepoErrors_propagatesError() {
+        when(repo.existsByEmail("err@x.com")).thenReturn(Mono.error(new RuntimeException("boom")));
+
+        StepVerifier.create(useCase.existUserByEmail("err@x.com"))
+                .expectErrorMatches(e -> e.getMessage().contains("boom"))
+                .verify();
+
+        verify(repo).existsByEmail("err@x.com");
+        verifyNoMoreInteractions(repo);
+    }
 }

@@ -2,6 +2,7 @@ package co.com.crediya.r2dbc.user;
 
 import co.com.crediya.model.role.Role;
 import co.com.crediya.model.user.User;
+import co.com.crediya.model.user.UserData;
 import co.com.crediya.model.user.gateways.UserRepository;
 import co.com.crediya.model.usercredentials.UserCredentials;
 import co.com.crediya.r2dbc.user.entity.UserEntity;
@@ -53,6 +54,12 @@ public class UserReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     @Override
     public Mono<Boolean> existsByEmail(String email) {
         return repository.existsByEmail(email);
+    }
+
+    @Override
+    public Mono<UserData> findByEmail(String email) {
+        return repository.findRowByEmail(email)
+                .map(entityMapper::toUserData);
     }
 
     @Override
