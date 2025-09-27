@@ -8,6 +8,9 @@ spring:
     url: ${SPRING_FLYWAY_URL}
     user: ${SPRING_FLYWAY_USER}
     password: ${SPRING_FLYWAY_PASSWORD}
+  r2dbc:
+    properties:
+      sslMode: REQUIRE
 
 security:
   jwt:

@@ -33,18 +33,18 @@ public class SecurityConfig {
                 .authorizeExchange(ex -> ex
                         .pathMatchers("/webjars/swagger-ui/**", "/v3/api-docs/**",
                                 "/actuator/health", "/.well-known/jwks.json").permitAll()
-                        .pathMatchers(HttpMethod.POST, "/api/login",
-                                "/api/v1/login").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/auth/api/login",
+                                "/auth/api/v1/login").permitAll()
 
                         // Users
-                        .pathMatchers(HttpMethod.GET, "/api/users")
+                        .pathMatchers(HttpMethod.GET, "/auth/api/users")
                         .hasAnyRole("ADMIN", "ADVISOR")
-                        .pathMatchers(HttpMethod.POST, "/api/users")
+                        .pathMatchers(HttpMethod.POST, "/auth/api/users")
                         .hasAnyRole("ADMIN", "ADVISOR")
 
-                        .pathMatchers(HttpMethod.GET, "/api/users/*")
+                        .pathMatchers(HttpMethod.GET, "/auth/api/users/*")
                         .authenticated()
-                        .pathMatchers(HttpMethod.DELETE, "/api/users/*")
+                        .pathMatchers(HttpMethod.DELETE, "/auth/api/users/*")
                         .hasAnyRole("ADMIN", "ADVISOR")
 
                         .anyExchange().authenticated()

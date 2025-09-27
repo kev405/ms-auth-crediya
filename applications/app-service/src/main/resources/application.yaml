@@ -23,11 +23,11 @@ management:
 
 routes:
   paths:
-    users: /api/users
-    usersById: /api/users/{id}
-    usersByEmail: /api/users/email/{email}
-    usersDataByEmail: /api/users/email-info/{email}
-    login: /api/login
+    users: /auth/api/users
+    usersById: /auth/api/users/{id}
+    usersByEmail: /auth/api/users/email/{email}
+    usersDataByEmail: /auth/api/users/email-info/{email}
+    login: /auth/api/login
 
 springdoc:
   api-docs:
